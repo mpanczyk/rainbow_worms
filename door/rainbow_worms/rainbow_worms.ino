@@ -10,7 +10,9 @@
 #define MIN(x,y) (((x)>(y))?(y):(x))
 #define ABS(x) ((x)<0?(-(x)):(x))
 
-#define MQTT_PUB_LIGHTS "door/lights"
+#define MQTT_PUB_DELAY "door/delay"
+#define MQTT_PUB_FUNCTION "door/function_number"
+
 
 AsyncMqttClient mqttClient;
 Ticker mqttReconnectTimer;
@@ -19,6 +21,12 @@ WiFiEventHandler wifiConnectHandler;
 WiFiEventHandler wifiDisconnectHandler;
 Ticker wifiReconnectTimer;
 
+
+#define TAIL_LENGTH 7
+uint32_t color_tail_coords[TAIL_LENGTH] = {0};
+uint8_t color_tail_colors[TAIL_LENGTH] = {255, 128, 44, 12, 10, 2, 1};
+uint32_t tail_pointer = 4;
+uint8_t function_number = 0;
 
 uint8_t fade[] = {255, 160, 100, 60, 30, 10, 4, 1, 0};
 uint32_t array[PIXELS_NUMBER];
@@ -72,7 +80,8 @@ void connectToMqtt() {
 
 void onMqttConnect(bool sessionPresent) {
   Serial.println("Connected to MQTT.");
-  mqttClient.subscribe(MQTT_PUB_LIGHTS, 1);
+  mqttClient.subscribe(MQTT_PUB_DELAY, 1);
+  mqttClient.subscribe(MQTT_PUB_FUNCTION, 1);
   Serial.print("Session present: ");
   Serial.println(sessionPresent);
 }
@@ -93,15 +102,12 @@ void onMqttMessage(
     size_t index,
     size_t total
 ) {
-  sscanf(payload, "%d", &loop_delay);
-  Serial.println("onMqttMessage");
-  Serial.println(topic);
-  Serial.print("len: ");
-  Serial.println(len);
-  Serial.print("total: ");
-  Serial.println(total);
-  Serial.print("index: ");
-  Serial.println(index);
+    Serial.printf("message - topic: %s, payload: %s", topic, payload);
+    if(!strcmp(topic, MQTT_PUB_DELAY)){
+        sscanf(payload, "%d", &loop_delay);
+    } else if(!strcmp(topic, MQTT_PUB_FUNCTION)){
+        sscanf(payload, "%d", &function_number);
+    }
 }
 
 
@@ -187,11 +193,6 @@ void setup() {
   connectToWifi();
 }
 
-#define TAIL_LENGTH 7
-uint32_t color_tail_coords[TAIL_LENGTH] = {0};
-uint8_t color_tail_colors[TAIL_LENGTH] = {255, 128, 44, 12, 10, 2, 1};
-uint32_t tail_pointer = 4;
-
 void ping(){
   uint32_t x, y;
   tail_pointer = (2*TAIL_LENGTH+tail_pointer-1) % TAIL_LENGTH;
@@ -208,8 +209,20 @@ void ping(){
   strip.show();
 }
 
+void off(){
+    strip.clear();
+    strip.show();
+    delay(10);
+}
+
+typedef void (*func)();
+func functions[] = {
+    &off,
+    &ping,
+    &rainbow_worms
+};
+
 void loop() {
   delay(loop_delay);
-  //rainbow_worms();
-  ping();
+  functions[function_number%(sizeof(functions)/sizeof(functions[0]))]();
 }
