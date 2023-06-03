@@ -12,7 +12,6 @@
 
 #define MQTT_PUB_LIGHTS "door/lights"
 
-
 AsyncMqttClient mqttClient;
 Ticker mqttReconnectTimer;
 
@@ -28,6 +27,27 @@ uint8_t green_array[PIXELS_NUMBER];
 uint8_t blue_array[PIXELS_NUMBER];
 uint32_t rainbow_worms_time;
 uint32_t loop_delay;
+
+#define WIDTH 12
+#define HEIGHT 7
+
+#define WIDTH_1 (WIDTH-1)
+#define HEIGHT_1 (HEIGHT-1)
+uint32_t coords_mapping[HEIGHT][WIDTH] = {
+    {72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83},
+    {71, 70, 69, 68, 67, 66, 65, 64, 63, 62, 61, 60},
+    {48, 49, 50, 51, 52, 53, 53, 55, 56, 57, 58, 59},
+    {47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37, 36},
+    {24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35},
+    {23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12},
+    {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11}
+};
+
+uint32_t my_abs(int32_t value){
+  if(value < 0)
+    return -value;
+  return value;
+}
 
 void connectToWifi() {
   Serial.println("Connecting to Wi-Fi...");
@@ -136,7 +156,7 @@ void fill_array(uint32_t time){
 }
 
 void setup() {
-  loop_delay = 3;
+  loop_delay = 5000;
   rainbow_worms_time = 0;
   strip.begin();
   strip.setBrightness(50);
@@ -167,7 +187,24 @@ void rainbow_worms(){
   ++rainbow_worms_time;
 }
 
+void ping(){
+  uint32_t x, y;
+
+  x = my_abs(WIDTH_1-(int32_t)((int32_t)(1.9*rainbow_worms_time)%(2*WIDTH_1)));
+  y = my_abs(HEIGHT_1-(int32_t)(rainbow_worms_time%(2*HEIGHT_1)));
+  strip.setPixelColor(coords_mapping[y][x], strip.Color(0,0,0));
+
+  ++rainbow_worms_time;
+
+  x = my_abs(WIDTH_1-(int32_t)((int32_t)(1.9*rainbow_worms_time)%(2*WIDTH_1)));
+  y = my_abs(HEIGHT_1-(int32_t)(rainbow_worms_time%(2*HEIGHT_1)));
+  strip.setPixelColor(coords_mapping[y][x], strip.Color(255,0,0));
+
+  strip.show();
+}
+
 void loop() {
   delay(loop_delay);
-  rainbow_worms();
+  //rainbow_worms();
+  ping();
 }
