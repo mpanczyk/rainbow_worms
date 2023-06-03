@@ -155,6 +155,15 @@ void fill_array(uint32_t time){
   }
 }
 
+
+void rainbow_worms(){
+  fill_array(rainbow_worms_time);
+  for(uint32_t pixel_number = 0; pixel_number < PIXELS_NUMBER; ++pixel_number)
+    strip.setPixelColor(pixel_number, array[pixel_number]);
+  strip.show();
+  ++rainbow_worms_time;
+}
+
 void setup() {
   loop_delay = 5000;
   rainbow_worms_time = 0;
@@ -178,28 +187,24 @@ void setup() {
   connectToWifi();
 }
 
-
-void rainbow_worms(){
-  fill_array(rainbow_worms_time);
-  for(uint32_t pixel_number = 0; pixel_number < PIXELS_NUMBER; ++pixel_number)
-    strip.setPixelColor(pixel_number, array[pixel_number]);
-  strip.show();
-  ++rainbow_worms_time;
-}
+#define TAIL_LENGTH 7
+uint32_t color_tail_coords[TAIL_LENGTH] = {0};
+uint8_t color_tail_colors[TAIL_LENGTH] = {255, 128, 44, 12, 10, 2, 1};
+uint32_t tail_pointer = 4;
 
 void ping(){
   uint32_t x, y;
+  tail_pointer = (2*TAIL_LENGTH+tail_pointer-1) % TAIL_LENGTH;
+  strip.setPixelColor(color_tail_coords[tail_pointer], 0, 0, 0);
 
   x = my_abs(WIDTH_1-(int32_t)((int32_t)(1.9*rainbow_worms_time)%(2*WIDTH_1)));
   y = my_abs(HEIGHT_1-(int32_t)(rainbow_worms_time%(2*HEIGHT_1)));
-  strip.setPixelColor(coords_mapping[y][x], strip.Color(0,0,0));
+  color_tail_coords[tail_pointer] = coords_mapping[y][x];
 
+  for(uint8_t i = 0; i<TAIL_LENGTH; ++i){
+      strip.setPixelColor(color_tail_coords[(i+tail_pointer)%TAIL_LENGTH], color_tail_colors[i], 0, 0);
+  }
   ++rainbow_worms_time;
-
-  x = my_abs(WIDTH_1-(int32_t)((int32_t)(1.9*rainbow_worms_time)%(2*WIDTH_1)));
-  y = my_abs(HEIGHT_1-(int32_t)(rainbow_worms_time%(2*HEIGHT_1)));
-  strip.setPixelColor(coords_mapping[y][x], strip.Color(255,0,0));
-
   strip.show();
 }
 
