@@ -17,7 +17,7 @@
 #define BME_MISO 12
 #define BME_MOSI 13
 #define BME_CS 15*/
- 
+
 Adafruit_BMP085 bmp; // I2C
 //Adafruit_BME680 bme(BME_CS); // hardware SPI
 //Adafruit_BME680 bme(BME_CS, BME_MOSI, BME_MISO, BME_SCK);
@@ -103,10 +103,10 @@ void setup() {
     Serial.println("Nie odnaleziono czujnika BMP085 / BMP180");
     while (1) {}
   }
-  
+
   wifiConnectHandler = WiFi.onStationModeGotIP(onWifiConnect);
   wifiDisconnectHandler = WiFi.onStationModeDisconnected(onWifiDisconnect);
-  
+
   mqttClient.onConnect(onMqttConnect);
   mqttClient.onDisconnect(onMqttDisconnect);
   //mqttClient.onSubscribe(onMqttSubscribe);
@@ -115,19 +115,19 @@ void setup() {
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
   mqttClient.setCredentials(MQTT_USER, MQTT_PASSWORD);
   connectToWifi();
-  
+
   // Set up oversampling and filter initialization
-  
+
 }
 
 void loop() {
   unsigned long currentMillis = millis();
-  // Every X number of seconds (interval = 10 seconds) 
+  // Every X number of seconds (interval = 10 seconds)
   // it publishes a new MQTT message
   if (currentMillis - previousMillis >= interval) {
     // Save the last time a new reading was published
     previousMillis = currentMillis;
-    
+
     Serial.println();
     Serial.printf("Temperature = %.2f ºC \n", temperature);
     Serial.printf("Pressure = %.2f hPa \n", pressure);
